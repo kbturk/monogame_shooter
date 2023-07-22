@@ -12,9 +12,17 @@ public static class Extensions
         return (float)Math.Atan2(vector.Y, vector.X);
     }
 
+    //TODO: consider deleting at end of project & replacing
+    //with builtin Vector2 * float
+    public static Vector2 ScaleTo(this Vector2 vector, float acc)
+    {
+        return new Vector2(vector.X * acc, vector.Y * acc);
+    }
+
     public static float NextFloat(this Random rand, float minValue, float maxValue) {
         return (float)rand.NextDouble() * (maxValue - minValue) + minValue;
     }
+
 }
 
 public record class MathUtil {

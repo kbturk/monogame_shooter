@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using Quaternion = System.Numerics.Quaternion;
+using System.Collections.Generic;
 
 namespace shooter;
 
@@ -27,7 +28,7 @@ public abstract class Entity
 
     public abstract void Update();
 
-    public virtual void  Draw(SpriteBatch spriteBatch)
+    public virtual void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(
                 image,
@@ -129,6 +130,8 @@ public class Enemy: Entity
 {
     private int timeUntilStart = 60;
     public bool IsActive { get { return timeUntilStart <=0; } }
+    private List<IEnumerator<int>> behaviours = new List<IEnumerator<int>>();
+    private Random rand = new Random();
 
     public Enemy(Texture2D image, Vector2 position)
     {
@@ -138,11 +141,151 @@ public class Enemy: Entity
         color = Color.Transparent;
     }
 
+    // Enemy Types
+    public static Enemy CreateSeeker(Vector2 position)
+    {
+        var enemy = new Enemy(Art.Seeker, position);
+        enemy.AddBehavior(enemy.FollowPlayer());
+
+        return enemy;
+    }
+
+    public static Enemy CreateWanderer(Vector2 position)
+    {
+        var enemy = new Enemy(Art.Wanderer, position);
+        enemy.AddBehavior(enemy.MoveRandomly());
+        return enemy;
+    }
+
+    //Behaviours
+    private IEnumerable<int> FollowPlayer(float acceleration = 1f)
+    {
+        while (true)
+        {
+            Velocity += (PlayerShip.Instance.Position - Position).ScaleTo(acceleration);
+            if (Velocity != Vector2.Zero)
+                Orientation = Velocity.ToAngle();
+
+            yield return 0;
+        }
+    }
+
+    private IEnumerable<int> MoveInSquare()
+    {
+        const int framesPerSide = 30;
+        float speed = 1;
+        while (true)
+        {
+            //move right by speed each frame
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity = Vector2.UnitX * speed;
+                yield return 0;
+            }
+
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity = Vector2.UnitY * speed;
+                yield return 0;
+            }
+
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity =  - Vector2.UnitX * speed;
+                yield return 0;
+            }
+
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity =  - Vector2.UnitY * speed;
+                yield return 0;
+            }
+        }
+    }
+
+    private IEnumerable<int> MoveInDiamond()
+    {
+        const int framesPerSide = 30;
+        float speed = 1f;
+        while (true)
+        {
+            //move right & down by speed each frame
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity = new Vector2(1f, 1f) * speed;
+                yield return 0;
+            }
+
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity = new Vector2(-1f, 1f) * speed;
+                yield return 0;
+            }
+
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity =  new Vector2(-1f, -1f) * speed;
+                yield return 0;
+            }
+
+            for (int i = 0; i < framesPerSide; i++)
+            {
+                Velocity =  new Vector2(1f, -1f) * speed;
+                yield return 0;
+            }
+        }
+    }
+
+    IEnumerable<int> MoveRandomly()
+    {
+        float direction = rand.NextFloat(0, MathHelper.TwoPi);
+
+        while (true)
+        {
+            direction += rand.NextFloat(-0.1f, 0.1f);
+            direction = MathHelper.WrapAngle(direction);
+
+            for (int i = 0; i < 6; i++)
+            {
+                Velocity += MathUtil.FromPolar(direction, 0.4f);
+                Orientation -= 0.05f;
+
+                var bounds = GameRoot.Viewport.Bounds;
+                bounds.Inflate(-image.Width, -image.Height);
+
+                // if the enemy is outside the bounds
+                // move it away from the edge
+                if (!bounds.Contains(Position.ToPoint()))
+                    direction =
+                        (GameRoot.ScreenSize / 2 - Position)
+                        .ToAngle() + rand.NextFloat(
+                                -MathHelper.PiOver2,
+                                MathHelper.PiOver2);
+
+                yield return 0;
+            }
+        }
+    }
+
+    private void AddBehavior(IEnumerable<int> behaviour)
+    {
+        behaviours.Add(behaviour.GetEnumerator());
+    }
+
+    private void ApplyBehaviours()
+    {
+        for (int i = 0; i < behaviours.Count; i++)
+        {
+            if (!behaviours[i].MoveNext())
+                behaviours.RemoveAt(i--);
+        }
+    }
+
     public override void Update()
     {
         if (timeUntilStart <= 0)
         {
-
+            ApplyBehaviours();
         }
         else
         {
