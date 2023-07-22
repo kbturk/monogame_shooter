@@ -16,7 +16,7 @@ public class GameRoot : Game
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        IsMouseVisible = true;
+        IsMouseVisible = false;
         Instance = this;
     }
 
@@ -41,6 +41,7 @@ public class GameRoot : Game
             Exit();
 
         // TODO: Add your update logic here
+        Input.Update();
         EntityManager.Update();
 
         base.Update(gameTime);
@@ -54,6 +55,8 @@ public class GameRoot : Game
 
         _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Additive);
         EntityManager.Draw(_spriteBatch);
+        //draw the mouse cursor
+        _spriteBatch.Draw(Art.Pointer, Input.MousePosition, Color.White);
         _spriteBatch.End();
 
         base.Draw(gameTime);

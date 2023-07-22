@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
 
+namespace shooter;
+
 static class Input {
     private static KeyboardState keyboardState, lastKeyboardState;
     private static MouseState mouseState, lastMouseState;
@@ -28,7 +30,8 @@ static class Input {
         if (new[] { Keys.Left, Keys.Right, Keys.Up, Keys.Down }.Any(x =>
                     keyboardState.IsKeyDown(x)) || gamepadState.ThumbSticks.Right != Vector2.Zero)
             isAimingWithMouse = false;
-        else if (MousePosition != new Vector2(lastMouseState.X, lastMouseState.Y))
+        else if (//MousePosition != new Vector2(lastMouseState.X, lastMouseState.Y) &&
+                mouseState.LeftButton == ButtonState.Pressed)
             isAimingWithMouse = true;
     }
 
@@ -60,5 +63,43 @@ static class Input {
         return direction;
     }
 
+    public static Vector2 GetAimDirection() {
+        if (isAimingWithMouse)
+            return GetMouseAimDirection();
+
+        Vector2 direction = gamepadState.ThumbSticks.Right;
+        direction.Y *=-1;
+
+        if (keyboardState.IsKeyDown(Keys.Left))
+            direction.X -= 1;
+        if (keyboardState.IsKeyDown(Keys.Right))
+            direction.X += 1;
+        if (keyboardState.IsKeyDown(Keys.Up))
+            direction.Y -= 1;
+        if (keyboardState.IsKeyDown(Keys.Down))
+            direction.Y += 1;
+
+        // If there's no aim input, return zero. Otherwise
+        // normalize the direction to havea length of 1.
+        if (direction == Vector2.Zero)
+            return Vector2.Zero;
+        else
+            return Vector2.Clamp(direction, new Vector2(-1,-1), new Vector2(1,1));
+    }
+
+    private static Vector2 GetMouseAimDirection() {
+        Vector2 direction = MousePosition - PlayerShip.Instance.Position;
+
+        if (direction == Vector2.Zero)
+            return Vector2.Zero;
+        else
+            return Vector2.Clamp(direction, new Vector2(-1,-1), new Vector2(1,1));
+
+    }
+
+    public static bool WasBombButtonPressed() {
+        return WasButtonPressed(Buttons.LeftTrigger) ||
+            WasButtonPressed(Buttons.RightTrigger) ||
+            WasKeyPressed(Keys.Space);
+    }
 }
-        
