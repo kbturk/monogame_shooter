@@ -87,6 +87,7 @@ public class GameRoot : Game
 
             Vector2 textSize = Art.Font.MeasureString(text);
             _spriteBatch.DrawString(Art.Font, text, ScreenSize / 2- textSize / 2, Color.White);
+            Console.WriteLine("Game Over!");
         }
 
         //draw the mouse cursor
