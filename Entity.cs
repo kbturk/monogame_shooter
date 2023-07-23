@@ -1,6 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
+using Microsoft.Xna.Framework.Audio;
 using System;
 using Quaternion = System.Numerics.Quaternion;
 using System.Collections.Generic;
@@ -86,7 +88,9 @@ public class PlayerShip: Entity
         //check for death
         if (IsDead)
         {
-            framesUntilRespawn--;
+            if (--framesUntilRespawn <= 0 && PlayerStatus.IsGameOver)
+                PlayerStatus.Reset();
+            
             return;
         }
 
@@ -114,6 +118,8 @@ public class PlayerShip: Entity
 
             offset = Vector2.Transform(new Vector2(25, 8), aimQuat);
             EntityManager.Add(new Bullet(Position + offset, vel));
+            Sound.Shot.Play(0.2f, rand.NextFloat(-0.2f, 0.2f), 0);
+
         }
 
         if (cooldownRemaining > 0)
@@ -187,6 +193,24 @@ public class Enemy: Entity
     {
         var enemy = new Enemy(Art.Wanderer, position);
         enemy.AddBehavior(enemy.MoveRandomly());
+        enemy.PointValue = 1;
+        
+        return enemy;
+    }
+
+    public static Enemy CreateWandererSquare(Vector2 position)
+    {
+        var enemy = new Enemy(Art.WandererSquare, position);
+        enemy.AddBehavior(enemy.MoveInSquare());
+        enemy.PointValue = 1;
+        
+        return enemy;
+    }
+
+    public static Enemy CreateWandererDiamond(Vector2 position)
+    {
+        var enemy = new Enemy(Art.WandererDiamond, position);
+        enemy.AddBehavior(enemy.MoveInDiamond());
         enemy.PointValue = 1;
         
         return enemy;
@@ -339,5 +363,7 @@ public class Enemy: Entity
         IsExpired = true;
         PlayerStatus.AddPoints(PointValue);
         PlayerStatus.IncreaseMultiplier();
+        Sound.Explosion.Play(0.5f, rand.NextFloat(-0.2f, 0.2f), 0);
+
     }
 }

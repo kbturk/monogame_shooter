@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
+using Microsoft.Xna.Framework.Audio;
 using Console = System.Console;
 
 namespace shooter;
@@ -40,12 +42,16 @@ public class GameRoot : Game
 
         base.Initialize();
         EntityManager.Add(PlayerShip.Instance);
+        MediaPlayer.IsRepeating = true;
+        MediaPlayer.Play(Sound.Music);
     }
 
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         Art.Load(Content);
+        Sound.Load(Content);
+
         Console.WriteLine($"Viewport Size: {ScreenSize}");
         // TODO: use this.Content to load your game content here
     }
@@ -83,11 +89,11 @@ public class GameRoot : Game
         //draw gameover
         if (PlayerStatus.IsGameOver)
         {
+            Console.WriteLine("Game Over!");
             string text = $"Game Over\nYour Score: {PlayerStatus.Score}\nHigh Score: {PlayerStatus.HighScore}";
 
             Vector2 textSize = Art.Font.MeasureString(text);
             _spriteBatch.DrawString(Art.Font, text, ScreenSize / 2- textSize / 2, Color.White);
-            Console.WriteLine("Game Over!");
         }
 
         //draw the mouse cursor

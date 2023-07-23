@@ -7,12 +7,18 @@ namespace shooter;
 static class EnemySpawner
 {
     static Random rand = new Random();
-    static float inverseSpawnChance = 60;
+    static float inverseSpawnChance = 120;//originally 60
 
     public static void Update()
     {
         if (!PlayerShip.Instance.IsDead && EntityManager.Count < 200)
         {
+            if (rand.Next((int)inverseSpawnChance) == 0)
+                EntityManager.Add(Enemy.CreateWandererDiamond(GetSpawnPosition()));
+
+            if (rand.Next((int)inverseSpawnChance) == 0)
+                EntityManager.Add(Enemy.CreateWandererSquare(GetSpawnPosition()));
+
             if (rand.Next((int)inverseSpawnChance) == 0)
                 EntityManager.Add(Enemy.CreateSeeker(GetSpawnPosition()));
 

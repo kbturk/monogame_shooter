@@ -80,8 +80,7 @@ static class PlayerStatus
 
     public static void RemoveLife()
     {
-        if (--Lives <= 0)
-            Reset();
+        --Lives;    
     }
 
     private static int LoadHighScore()
