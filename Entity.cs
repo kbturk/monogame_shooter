@@ -17,7 +17,7 @@ public abstract class Entity
     public Vector2 Position, Velocity, Acceleration;
     public float Orientation;
     public float Radius = 20; //used for sircular collision detection
-    public bool IsExpired; //true if entity was destroyed
+    public bool IsExpired = false; //true if entity was destroyed
 
     public Vector2 Size
     {
@@ -48,7 +48,10 @@ public class PlayerShip: Entity
 {
     const int cooldownFrames = 6;
     int cooldownRemaining = 0;
+    int framesUntilRespawn = 0;
+    public bool IsDead { get { return framesUntilRespawn > 0; }}
     static Random rand = new Random();
+
 
     private static PlayerShip instance;
 
@@ -69,9 +72,24 @@ public class PlayerShip: Entity
         Radius = 10;
     }
 
+    public void Kill()
+    {
+        PlayerStatus.RemoveLife();
+        framesUntilRespawn = PlayerStatus.IsGameOver ? 300 : 120;
+
+        EnemySpawner.Reset();
+    }
+
     //TODO: build in acceleration/deceleration for fun
     public override void Update()
     {
+        //check for death
+        if (IsDead)
+        {
+            framesUntilRespawn--;
+            return;
+        }
+
         const float speed = 8;
         Velocity = speed * Input.GetMovementDirection();
         Position += Velocity;
@@ -100,6 +118,12 @@ public class PlayerShip: Entity
 
         if (cooldownRemaining > 0)
             cooldownRemaining--;
+    }
+
+    public override void Draw(SpriteBatch spriteBatch)
+    {
+        if (!IsDead)
+            base.Draw(spriteBatch);
     }
 }
 
@@ -130,6 +154,7 @@ public class Enemy: Entity
 {
     private int timeUntilStart = 60;
     public bool IsActive { get { return timeUntilStart <=0; } }
+    public int PointValue { get; private set; }
     private List<IEnumerator<int>> behaviours = new List<IEnumerator<int>>();
     private Random rand = new Random();
 
@@ -140,12 +165,20 @@ public class Enemy: Entity
         Radius = image.Width/ 2f;
         color = Color.Transparent;
     }
+    
+    // collision resolution w other enemy
+    public void HandleCollision(Enemy other)
+    {
+        var d = Position - other.Position;
+        Velocity += 10 * d / (d.LengthSquared() + 1);
+    }
 
     // Enemy Types
     public static Enemy CreateSeeker(Vector2 position)
     {
         var enemy = new Enemy(Art.Seeker, position);
         enemy.AddBehavior(enemy.FollowPlayer());
+        enemy.PointValue = 2;
 
         return enemy;
     }
@@ -154,6 +187,8 @@ public class Enemy: Entity
     {
         var enemy = new Enemy(Art.Wanderer, position);
         enemy.AddBehavior(enemy.MoveRandomly());
+        enemy.PointValue = 1;
+        
         return enemy;
     }
 
@@ -302,5 +337,7 @@ public class Enemy: Entity
     public void WasShot()
     {
         IsExpired = true;
+        PlayerStatus.AddPoints(PointValue);
+        PlayerStatus.IncreaseMultiplier();
     }
 }

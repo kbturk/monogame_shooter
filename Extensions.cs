@@ -14,9 +14,9 @@ public static class Extensions
 
     //TODO: consider deleting at end of project & replacing
     //with builtin Vector2 * float
-    public static Vector2 ScaleTo(this Vector2 vector, float acc)
+    public static Vector2 ScaleTo(this Vector2 vector, float length)
     {
-        return new Vector2(vector.X * acc, vector.Y * acc);
+        return vector * (length / vector.Length());
     }
 
     public static float NextFloat(this Random rand, float minValue, float maxValue) {

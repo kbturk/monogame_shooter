@@ -25,6 +25,13 @@
 /processorParam:TextureFormat=Color
 /build:Bullet.png
 
+#begin NovaSquare.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:NovaSquare.spritefont
+
 #begin Player.png
 /importer:TextureImporter
 /processor:TextureProcessor
