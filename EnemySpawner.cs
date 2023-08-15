@@ -8,6 +8,7 @@ static class EnemySpawner
 {
     static Random rand = new Random();
     static float inverseSpawnChance = 120;//originally 60
+    static float inverseBlackHoleChance = 120;//originally 60
 
     public static void Update()
     {
@@ -25,6 +26,10 @@ static class EnemySpawner
             if (rand.Next((int)inverseSpawnChance) == 0)
                 EntityManager.Add(Enemy.CreateWanderer(GetSpawnPosition()));
 
+            if (EntityManager.blackHoles.Count < 2 && rand.Next((int)inverseBlackHoleChance) == 0)
+            {
+                EntityManager.Add(new BlackHole(GetSpawnPosition()));
+            }
         }
 
         //slowly increase the spawn rate as time progresses

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Audio;
 using Console = System.Console;
+using BloomPostprocess;
 
 namespace shooter;
 
@@ -16,6 +17,7 @@ public class GameRoot : Game
     public static Viewport Viewport { get { return Instance.GraphicsDevice.Viewport; } }
     public static Vector2 ScreenSize { get { return new Vector2(Viewport.Width, Viewport.Height); } }
     public static GameTime GameTime { get; private set; }
+    public BloomComponent bloom;
 
     public GameRoot()
     {
@@ -23,6 +25,10 @@ public class GameRoot : Game
         Content.RootDirectory = "Content";
         IsMouseVisible = false;
         Instance = this;
+
+        bloom = new BloomComponent(this);
+        Components.Add(bloom);
+        bloom.Settings = new BloomSettings(null, 0.05f, 1, 2, 1, 1.9f, 1);
     }
 
     private void DrawRightAlignedString(string text, float y)
@@ -75,6 +81,7 @@ public class GameRoot : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        bloom.BeginDraw();
         GraphicsDevice.Clear(Color.Black);
 
         // TODO: Add your drawing code here
@@ -82,7 +89,8 @@ public class GameRoot : Game
         _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Additive);
         EntityManager.Draw(_spriteBatch);
 
-        _spriteBatch.DrawString(Art.Font, "Lives: " + PlayerStatus.Lives, new Vector2(5), Color.White);
+        _spriteBatch.DrawString(Art.Font, "Lives: " + PlayerStatus.Lives,
+                new Vector2(5), Color.White);
         DrawRightAlignedString("Score: " + PlayerStatus.Score, 5);
         DrawRightAlignedString("Multiplier: " + PlayerStatus.Multiplier, 35);
 
@@ -93,7 +101,8 @@ public class GameRoot : Game
             string text = $"Game Over\nYour Score: {PlayerStatus.Score}\nHigh Score: {PlayerStatus.HighScore}";
 
             Vector2 textSize = Art.Font.MeasureString(text);
-            _spriteBatch.DrawString(Art.Font, text, ScreenSize / 2- textSize / 2, Color.White);
+            _spriteBatch.DrawString(Art.Font, text,
+                    ScreenSize / 2- textSize / 2, Color.White);
         }
 
         //draw the mouse cursor
