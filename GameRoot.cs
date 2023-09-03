@@ -18,6 +18,7 @@ public class GameRoot : Game
     public static Vector2 ScreenSize { get { return new Vector2(Viewport.Width, Viewport.Height); } }
     public static GameTime GameTime { get; private set; }
     public BloomComponent bloom;
+    public static ParticleManager<ParticleState> ParticleManager { get; private set; }
 
     public GameRoot()
     {
@@ -48,6 +49,7 @@ public class GameRoot : Game
 
         base.Initialize();
         EntityManager.Add(PlayerShip.Instance);
+        ParticleManager = new ParticleManager<ParticleState>(1024 * 20, ParticleState.UpdateParticle);
         MediaPlayer.IsRepeating = true;
         MediaPlayer.Play(Sound.Music);
     }
@@ -75,6 +77,7 @@ public class GameRoot : Game
         EntityManager.Update();
         EnemySpawner.Update();
         PlayerStatus.Update();
+        ParticleManager.Update();
 
         base.Update(gameTime);
     }
@@ -87,6 +90,7 @@ public class GameRoot : Game
         // TODO: Add your drawing code here
 
         _spriteBatch.Begin(SpriteSortMode.Texture, BlendState.Additive);
+        ParticleManager.Draw(_spriteBatch);
         EntityManager.Draw(_spriteBatch);
 
         _spriteBatch.DrawString(Art.Font, "Lives: " + PlayerStatus.Lives,
