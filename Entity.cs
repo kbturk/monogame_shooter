@@ -76,8 +76,32 @@ public class PlayerShip: Entity
 
     public void Kill()
     {
+
         PlayerStatus.RemoveLife();
         framesUntilRespawn = PlayerStatus.IsGameOver ? 300 : 120;
+
+        Color yellow = new Color(0.8f, 0.8f, 0.4f);
+
+        for (int i = 0; i < 1200; i++)
+        {
+            float speed = 18f * (1f - 1 / rand.NextFloat(1f, 10f));
+            Color color = Color.Lerp(Color.White, yellow, rand.NextFloat(0,1));
+            var state = new ParticleState()
+            {
+                Velocity = rand.NextVector2(speed, speed),
+                         Type = ParticleType.None,
+                         LengthMultiplier = 1
+            };
+
+            GameRoot.ParticleManager.CreateParticle(
+                    Art.LineParticle,
+                    Position,
+                    color,
+                    190,
+                    new Vector2(1.5f, 1.5f),
+                    state
+                    );
+        }
 
         EnemySpawner.Reset();
     }
@@ -90,7 +114,7 @@ public class PlayerShip: Entity
         {
             if (--framesUntilRespawn <= 0 && PlayerStatus.IsGameOver)
                 PlayerStatus.Reset();
-            
+
             return;
         }
 
@@ -134,6 +158,7 @@ public class PlayerShip: Entity
 }
 
 public class Bullet : Entity {
+    private static Random rand = new Random();
 
     public Bullet(Vector2 position, Vector2 velocity)
     {
@@ -152,7 +177,22 @@ public class Bullet : Entity {
         Position += Velocity;
 
         if (!GameRoot.Viewport.Bounds.Contains(Position.ToPoint()))
+        {
             IsExpired = true;
+
+            for (int i = 0; i < 30; i++)
+                GameRoot.ParticleManager.CreateParticle(
+                        Art.LineParticle,
+                        Position,
+                        Color.LightBlue,
+                        50,
+                        new Vector2(1f, 1f),
+                        new ParticleState() {
+                        Velocity = rand.NextVector2(0, 9),
+                        Type = ParticleType.Bullet,
+                        LengthMultiplier = 1 }
+                        );
+        }
     }
 }
 
@@ -171,7 +211,7 @@ public class Enemy: Entity
         Radius = image.Width/ 2f;
         color = Color.Transparent;
     }
-    
+
     // collision resolution w other enemy
     public void HandleCollision(Enemy other)
     {
@@ -194,7 +234,7 @@ public class Enemy: Entity
         var enemy = new Enemy(Art.Wanderer, position);
         enemy.AddBehavior(enemy.MoveRandomly());
         enemy.PointValue = 1;
-        
+
         return enemy;
     }
 
@@ -203,7 +243,7 @@ public class Enemy: Entity
         var enemy = new Enemy(Art.WandererSquare, position);
         enemy.AddBehavior(enemy.MoveInSquare());
         enemy.PointValue = 1;
-        
+
         return enemy;
     }
 
@@ -212,7 +252,7 @@ public class Enemy: Entity
         var enemy = new Enemy(Art.WandererDiamond, position);
         enemy.AddBehavior(enemy.MoveInDiamond());
         enemy.PointValue = 1;
-        
+
         return enemy;
     }
 
